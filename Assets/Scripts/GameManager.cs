@@ -15,17 +15,45 @@ public class GameManager : SingletonClass<GameManager>
     public bool IsHoldingItem => HeldItem != null;
 
     public Inventory MainInventory, PickUpInventory;
+    private bool IsPickingUpItem => PickUpInventory.gameObject.activeSelf;
+    private Item _itemLockedToPickUp;
 
     public void Start()
     {
-        OpenPickUpInventory();
+        //TODO scythe?
+        PickUpInventory.gameObject.SetActive(false);
     }
 
-    public void OpenPickUpInventory()
+    public void OpenPickUpInventory(Item item)
     {
         PickUpInventory.gameObject.SetActive(true);
-        Item item = Instantiate(ItemPrefabs[Random.Range(0,ItemPrefabs.Count)]);
+        _itemLockedToPickUp = item;
         PickUpInventory.AddItem(item, 0,0);
+    }
+
+    public bool ClosePickUpInventory(out bool itemPickedUp)
+    {
+        itemPickedUp = false;
+        if (!IsPickingUpItem)
+            return false;
+
+        if(PickUpInventory.Items.Count == 0)
+        {
+            itemPickedUp = _itemLockedToPickUp != null;
+            PickUpInventory.gameObject.SetActive(false);
+            _itemLockedToPickUp = null;
+            return true;
+        }
+
+        if(PickUpInventory.Items.Count == 1 && PickUpInventory.Items[0] == _itemLockedToPickUp)
+        {
+            PickUpInventory.gameObject.SetActive(false);
+            PickUpInventory.RemoveItem(_itemLockedToPickUp);
+            Destroy(_itemLockedToPickUp.gameObject);
+            _itemLockedToPickUp = null;
+            return true;
+        }
+        return false;
     }
 
     private void MoveItem()
@@ -51,6 +79,7 @@ public class GameManager : SingletonClass<GameManager>
                     continue;
                 HeldItem = item;
                 inventory.RemoveItem(item);
+                HeldItem.GetComponentInChildren<SpriteRenderer>().sortingOrder = 10;
                 return true;
             }
         }
@@ -69,6 +98,7 @@ public class GameManager : SingletonClass<GameManager>
                 var (row, column) = inventory.GetRowColumnFromCoords(itemPos);
                 if (inventory.AddItem(HeldItem, row, column))
                 {
+                    HeldItem.GetComponentInChildren<SpriteRenderer>().sortingOrder = 5;
                     HeldItem = null;
                     return true;
                 }
@@ -92,6 +122,9 @@ public class GameManager : SingletonClass<GameManager>
     {
         ProcessInput();
         if(Input.GetKeyDown(KeyCode.P))
-            OpenPickUpInventory();
+            if(!IsPickingUpItem)
+                OpenPickUpInventory(Instantiate(ItemPrefabs[Random.Range(0,ItemPrefabs.Count)]));
+            else
+                ClosePickUpInventory(out _);
     }
 }

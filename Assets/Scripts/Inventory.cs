@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.UI;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class Inventory : MonoBehaviour
 {
@@ -10,11 +12,24 @@ public class Inventory : MonoBehaviour
     public int rows,columns;
 
     private List<Item> items;
+
+    public IReadOnlyList<Item> Items => items;
+
     private Item outOfInventoryItem;
     private Dictionary<Item, (int,int)> itemPositions;
 
+    UnityEvent<Item> E_ItemAdded = new ();
+    UnityEvent<Item> E_ItemRemoved = new UnityEvent<Item>();
+
     [SerializeField]
     private GameObject _inventoryTopLeft;
+    private GameObject _highlightsGO;
+
+    [SerializeField]
+    private Sprite _highlightSprite;
+    [SerializeField]
+    private Color _highlightColorGood, _highlightColorBad;
+    private SpriteRenderer[,] _highlightsSprites;
 
     bool[,] slots;
 
@@ -23,6 +38,26 @@ public class Inventory : MonoBehaviour
         slots = new bool[rows,columns];
         items = new();
         itemPositions = new();
+
+        //highlights
+        _highlightsGO = new GameObject("highlights");
+        _highlightsGO.transform.parent = transform;
+        _highlightsSprites = new SpriteRenderer[rows, columns];
+        for (int x = 0; x < columns; x++)
+        {
+            for (int y = 0; y < rows; y++)
+            {
+                var _highlight = new GameObject($"hl ({y},{x})");
+                _highlight.transform.parent = _highlightsGO.transform;
+                var sr = _highlight.AddComponent<SpriteRenderer>();
+                sr.sprite = _highlightSprite;
+                _highlight.transform.position = _inventoryTopLeft.transform.position + new Vector3(x, -y, 0) * _unitsPerInventorySlot;
+                sr.renderingLayerMask = 1;
+                _highlight.transform.localScale= new Vector3(4.601659f, 4.5317f, 1);
+                _highlight.SetActive(false);
+                _highlightsSprites[y, x] = sr;
+            }
+        }
     }
 
 
@@ -49,31 +84,39 @@ public class Inventory : MonoBehaviour
         return true;
     }
 
-    private void OnDrawGizmos()
+    private void DrawHighlights()
     {
+        if(!gameObject.activeSelf)
+            return;
+
         if (slots == null)
             return;
-        
-        for (int column = 0; column < columns; column++)
-        {
-            for (int row = 0; row < rows; row++)
-            {
-                if (slots[row, column])
-                    continue;
 
-                if (GameManager.Instance.IsHoldingItem) {
-                    var heldItem = GameManager.Instance.HeldItem;
-                    var (x, y) = GetRowColumnFromCoords(heldItem.transform.position + new Vector3(0.5f, -0.5f) * _unitsPerInventorySlot);
-                    if (heldItem.IsSpotOccupied(row-x,column-y))
-                        Gizmos.color = Color.yellow;
-                    else
-                        Gizmos.color = Color.magenta;
-                }
-                else
-                    Gizmos.color = Color.magenta;
-                Gizmos.DrawWireSphere(_inventoryTopLeft.transform.position + new Vector3(column, -row , 0) * _unitsPerInventorySlot, _unitsPerInventorySlot / 2f);
-            }
+        if (GameManager.Instance.HeldItem == null)
+        {
+            _highlightsGO.SetActive(false);
+            return;
         }
+        _highlightsGO.SetActive(true);
+
+        var (x0, y0) = GetRowColumnFromCoords(GameManager.Instance.HeldItem.transform.position + new Vector3(0.5f, -0.5f) * _unitsPerInventorySlot);
+
+        bool canBePlaced = CanBePlaced(GameManager.Instance.HeldItem,x0,y0);
+
+        for (int x = 0; x < rows; x++)
+            for (int y = 0; y < columns; y++)
+                _highlightsSprites[x, y].gameObject.SetActive(false);
+
+        foreach (var (x1,y1) in GameManager.Instance.HeldItem.OccupiedSpotsAfterTransform())
+        {
+            var x = x0 + x1;
+            var y = y0 + y1;
+            if (x < 0 || x >= rows || y < 0 || y >= columns)
+                continue;
+            _highlightsSprites[x, y].color = canBePlaced ? _highlightColorGood : _highlightColorBad;
+            _highlightsSprites[x,y].gameObject.SetActive(true);
+        }
+
     }
 
     public Item GetItemAtMousePos()
@@ -117,6 +160,9 @@ public class Inventory : MonoBehaviour
         foreach (var spot in spots)
             slots[x + spot.Item1, y + spot.Item2] = true;
         item.Locked = true;
+
+        E_ItemAdded.Invoke(item);
+
         return true;
     }
 
@@ -135,6 +181,8 @@ public class Inventory : MonoBehaviour
             slots[x + spot.Item1, y + spot.Item2] = false;
         item.Locked = false;
         itemPositions.Remove(item);
+
+        E_ItemRemoved.Invoke(item);
     }
 
     private void Start()
@@ -142,5 +190,10 @@ public class Inventory : MonoBehaviour
         _unitsPerInventorySlot = GameManager.Instance.unitsPerInventorySlot;
 
         PrepareInventory();
+    }
+
+    private void Update()
+    {
+        DrawHighlights();
     }
 }

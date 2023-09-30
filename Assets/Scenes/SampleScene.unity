@@ -575,7 +575,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1194468756}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 9.1, y: 17.5, z: 0}
+  m_LocalPosition: {x: 9.1425, y: 17.4636, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -664,6 +664,9 @@ MonoBehaviour:
   rows: 8
   columns: 6
   _inventoryTopLeft: {fileID: 1194468756}
+  _highlightSprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
+  _highlightColorGood: {r: 0.1914392, g: 0.7264151, b: 0, a: 0.2627451}
+  _highlightColorBad: {r: 1, g: 0, b: 0, a: 0.3254902}
 --- !u!1 &1947498424
 GameObject:
   m_ObjectHideFlags: 0
@@ -765,3 +768,6 @@ MonoBehaviour:
   rows: 8
   columns: 4
   _inventoryTopLeft: {fileID: 1118790329}
+  _highlightSprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
+  _highlightColorGood: {r: 0.1914392, g: 0.7264151, b: 0, a: 0.2627451}
+  _highlightColorBad: {r: 1, g: 0, b: 0, a: 0.3254902}

@@ -109,7 +109,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3441563189037059036}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 11.7, y: 12.2, z: 0.04942718}
+  m_LocalPosition: {x: -36.239998, y: 19.52, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -135,8 +135,8 @@ MonoBehaviour:
 
     XX'
   itemName: Lantern
-  rows: 6
-  columns: 4
+  rows: 3
+  columns: 2
   rotated: 0
   flipped: 0
-  Locked: 0
+  Locked: 1
