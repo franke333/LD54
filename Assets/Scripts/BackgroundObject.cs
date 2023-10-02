@@ -4,22 +4,41 @@ using UnityEngine;
 
 public class BackgroundObject : MonoBehaviour
 {
+    enum DecorType{
+        Trees, Stones, Grass
+    }
+
     public Vector2 offset, size;
     void Start()
     {
-        bool stones = Random.Range(0f, 1f) < 0.5f;
-        var sprites = !stones ?
-            BeautySalonManager.Instance.GenerateFromLayers(BeautySalonManager.Instance.backgroundLayersTrees) :
-            BeautySalonManager.Instance.GenerateFromLayers(BeautySalonManager.Instance.backgroundLayersStones);
+        float r = Random.Range(0, 6);
+        DecorType decor = r < 4 ? DecorType.Grass : (r == 4 ? DecorType.Stones : DecorType.Trees);
 
-        if(stones)
+        GameObject sprite;
+
+        switch (decor)
+        {
+            case DecorType.Trees:
+                sprite = BeautySalonManager.Instance.GenerateFromLayers(BeautySalonManager.Instance.backgroundLayersTrees);
+                break;
+            case DecorType.Stones:
+                sprite = BeautySalonManager.Instance.GenerateFromLayers(BeautySalonManager.Instance.backgroundLayersStones);
+                break;
+            default:
+                sprite = BeautySalonManager.Instance.GenerateFromLayers(BeautySalonManager.Instance.backgroundLayersGrass);
+                break;
+        }
+
+        if(decor == DecorType.Stones)
         {
             var bc = GetComponent<BoxCollider2D>();
             bc.offset = offset;
             bc.size = size;
         }
+        if(decor == DecorType.Grass)
+            Destroy(GetComponent<BoxCollider2D>());
 
-        sprites.transform.SetParent(this.transform);
-        sprites.transform.localPosition = Vector3.zero;
+        sprite.transform.SetParent(this.transform);
+        sprite.transform.localPosition = Vector3.zero;
     }
 }

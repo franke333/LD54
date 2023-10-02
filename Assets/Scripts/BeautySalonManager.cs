@@ -22,7 +22,7 @@ public class BeautySalonManager : SingletonClass<BeautySalonManager>
 
     public List<SpriteLayer> spriteLayers;
 
-    public List<SpriteLayer> backgroundLayersStones, backgroundLayersTrees;
+    public List<SpriteLayer> backgroundLayersStones, backgroundLayersTrees, backgroundLayersGrass;
 
     public GameObject GenerateFromLayers(List<SpriteLayer> layers)
     {
