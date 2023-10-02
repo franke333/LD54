@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.UI;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -18,8 +17,8 @@ public class Inventory : MonoBehaviour
     private Item outOfInventoryItem;
     private Dictionary<Item, (int,int)> itemPositions;
 
-    UnityEvent<Item> E_ItemAdded = new ();
-    UnityEvent<Item> E_ItemRemoved = new UnityEvent<Item>();
+    public UnityEvent<Item> E_ItemAdded = new ();
+    public UnityEvent<Item> E_ItemRemoved = new UnityEvent<Item>();
 
     [SerializeField]
     private GameObject _inventoryTopLeft;
@@ -28,10 +27,13 @@ public class Inventory : MonoBehaviour
     [SerializeField]
     private Sprite _highlightSprite;
     [SerializeField]
-    private Color _highlightColorGood, _highlightColorBad;
+    private Color _highlightColorGood, _highlightColorBad,_higlightColorQuest;
     private SpriteRenderer[,] _highlightsSprites;
 
     bool[,] slots;
+
+    [SerializeField]
+    bool _closeAfterStart;
 
     private void PrepareInventory()
     {
@@ -52,7 +54,7 @@ public class Inventory : MonoBehaviour
                 var sr = _highlight.AddComponent<SpriteRenderer>();
                 sr.sprite = _highlightSprite;
                 _highlight.transform.position = _inventoryTopLeft.transform.position + new Vector3(x, -y, 0) * _unitsPerInventorySlot;
-                sr.renderingLayerMask = 1;
+                sr.sortingOrder = 1;
                 _highlight.transform.localScale= new Vector3(4.601659f, 4.5317f, 1);
                 _highlight.SetActive(false);
                 _highlightsSprites[y, x] = sr;
@@ -92,20 +94,40 @@ public class Inventory : MonoBehaviour
         if (slots == null)
             return;
 
-        if (GameManager.Instance.HeldItem == null)
+        if (GameManager.Instance.HeldItem == null && GameManager.Instance.QuestItem == null)
         {
             _highlightsGO.SetActive(false);
             return;
         }
         _highlightsGO.SetActive(true);
 
-        var (x0, y0) = GetRowColumnFromCoords(GameManager.Instance.HeldItem.transform.position + new Vector3(0.5f, -0.5f) * _unitsPerInventorySlot);
-
-        bool canBePlaced = CanBePlaced(GameManager.Instance.HeldItem,x0,y0);
-
         for (int x = 0; x < rows; x++)
             for (int y = 0; y < columns; y++)
                 _highlightsSprites[x, y].gameObject.SetActive(false);
+
+
+        int x0=0, y0=0;
+
+        if (GameManager.Instance.QuestItem != null && GameManager.Instance.QuestItem.Locked == true && itemPositions.TryGetValue(GameManager.Instance.QuestItem,out var outval))
+        {
+            (x0, y0) = outval;
+            foreach (var (x1, y1) in GameManager.Instance.QuestItem.OccupiedSpotsAfterTransform())
+            {
+                var x = x0 + x1;
+                var y = y0 + y1;
+                if (x < 0 || x >= rows || y < 0 || y >= columns)
+                    continue;
+                _highlightsSprites[x, y].color = _higlightColorQuest;
+                _highlightsSprites[x, y].gameObject.SetActive(true);
+            }
+        }
+        if (GameManager.Instance.HeldItem == null)
+            return;
+
+        (x0, y0) = GetRowColumnFromCoords(GameManager.Instance.HeldItem.transform.position + new Vector3(0.5f, -0.5f) * _unitsPerInventorySlot);
+
+        bool canBePlaced = CanBePlaced(GameManager.Instance.HeldItem, x0, y0);
+
 
         foreach (var (x1,y1) in GameManager.Instance.HeldItem.OccupiedSpotsAfterTransform())
         {
@@ -116,6 +138,8 @@ public class Inventory : MonoBehaviour
             _highlightsSprites[x, y].color = canBePlaced ? _highlightColorGood : _highlightColorBad;
             _highlightsSprites[x,y].gameObject.SetActive(true);
         }
+
+
 
     }
 
@@ -190,6 +214,8 @@ public class Inventory : MonoBehaviour
         _unitsPerInventorySlot = GameManager.Instance.unitsPerInventorySlot;
 
         PrepareInventory();
+        if(_closeAfterStart)
+            gameObject.SetActive(false);
     }
 
     private void Update()
