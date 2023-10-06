@@ -49,8 +49,8 @@ public class GameManager : SingletonClass<GameManager>
 
     [Header("UI")]
     public GameObject MenuGO;
-    public List<GameObject> EndGameGO;
-    public TMP_Text pauseText, timeText, scoreText;
+    public List<GameObject> EndGameGO,EndGameGOOFF;
+    public TMP_Text pauseText, timeText, scoreEndText, scoreText;
 
     public GameObject Intro;
 
@@ -228,11 +228,7 @@ public class GameManager : SingletonClass<GameManager>
         
         globalLight.intensity = Mathf.Lerp(0.01f, 0.25f, (240f-TimeLeft) / 240f);
         ProcessInput();
-        if(Input.GetKeyDown(KeyCode.P))
-            if(!IsPickupInvOpen)
-                OpenPickUpInventory(Instantiate(ItemPrefabs[Random.Range(0,ItemPrefabs.Count)]),true);
-            else
-                ClosePickUpInventory(out _);
+
 
         if (Paused || Ended)
             return;
@@ -244,6 +240,7 @@ public class GameManager : SingletonClass<GameManager>
             TimeLeft = 0;
             EndGame();
         }
+        scoreText.text = $"Score: {GameManager.Instance.Score}";
         timeText.text = $"Time until sunrise: {((int)TimeLeft) / 60}:{(TimeLeft % 60).ToString("00.00")}";
     
     }
@@ -274,8 +271,10 @@ public class GameManager : SingletonClass<GameManager>
         MenuGO.SetActive(true);
         foreach (var go in EndGameGO)
             go.SetActive(true);
+        foreach (var go in EndGameGOOFF)
+            go.SetActive(false);
 
-        scoreText.text = $"Score: {GameManager.Instance.Score}";
+        scoreEndText.text = $"Score: {GameManager.Instance.Score}";
         pauseText.text = $"Game over";
     }
 }

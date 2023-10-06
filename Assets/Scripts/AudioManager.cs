@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class AudioManager : SingletonClass<AudioManager>
 {
@@ -12,6 +13,10 @@ public class AudioManager : SingletonClass<AudioManager>
 
     public bool Walking;
 
+    public Slider slider;
+
+    static float VolumeStatic = -1f;
+
     public float Volume
     {
         get
@@ -20,6 +25,7 @@ public class AudioManager : SingletonClass<AudioManager>
         }
         set
         {
+            VolumeStatic = value;
             AudioListener.volume = value;
         }
     }
@@ -88,7 +94,16 @@ public class AudioManager : SingletonClass<AudioManager>
 
         walkSource.loop = true;
 
-        Volume = 0.5f;
+        if(VolumeStatic != -1f)
+        {
+            Volume = VolumeStatic;
+        }
+        else
+        {
+            Volume = 0.5f;
+        }
+
+        slider.value = Volume;
 
         PlayMusic();
     }

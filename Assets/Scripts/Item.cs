@@ -200,6 +200,8 @@ public class Item : MonoBehaviour
 
     private void Update()
     {
+        if(!GameManager.Instance.AllowInput)
+            return;
         if (Input.GetKeyDown(KeyCode.R))
         {
             Rotate();

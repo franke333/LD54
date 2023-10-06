@@ -20,6 +20,10 @@ public class QuestManager : SingletonClass<QuestManager>
     public Sprite QuestIndicatorSprite;
     public List<Sprite> ItemSizeSprite;
 
+
+    public Gradient gradientPickUp, gradientDeliver;
+
+
     //top left and then clockwise
     public GameObject[] IndicatorCorners;
     public Vector3 IndicatorOffset;
@@ -83,7 +87,7 @@ public class QuestManager : SingletonClass<QuestManager>
         return Mathf.Min(Mathf.Max(mappedValue, toMin), toMax);
     }
 
-    public void UpdateIndicatorTransform(Quest quest)
+    public void UpdateIndicatorTransformAndColor(Quest quest)
     {
         Vector2 tl, tr, dr, dl;
         tl = IndicatorCorners[0].transform.position;
@@ -145,6 +149,12 @@ public class QuestManager : SingletonClass<QuestManager>
         questIndicatorDict[quest].transform.right = -qp + questIndicatorDict[quest].transform.position;
         questIndicatorDict[quest].transform.Rotate(0,0,45f);
         questIndicatorDict[quest].transform.GetChild(0).rotation = Quaternion.identity;
+
+        float t = Vector2.Distance(qp, PlayerScript.Instance.transform.position);
+        t = (Mathf.Clamp(t, 40f, 400f) - 40f)/(400f-40f);
+
+        questIndicatorDict[quest].GetComponent<SpriteRenderer>().color = 
+            (quest.progress == Quest.QuestProgress.NotStarted ? gradientPickUp : gradientDeliver).Evaluate(t);
     }
 
     public void UpdateIndicatorStatus(Quest quest)
@@ -231,11 +241,11 @@ public class QuestManager : SingletonClass<QuestManager>
         }
         foreach (var quest in ActiveQuests)
         {
-            UpdateIndicatorTransform(quest);
+            UpdateIndicatorTransformAndColor(quest);
         }
         foreach (var quest in AvailableQuests)
         {
-            UpdateIndicatorTransform(quest);
+            UpdateIndicatorTransformAndColor(quest);
         }
     }
 
